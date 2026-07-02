@@ -1,0 +1,38 @@
+[
+    {
+        "name": "Occupational Personality Questionnaire (OPQ)",
+        "link": "https://www.shl.com/products/assessments/personality-assessment/shl-occupational-personality-questionnaire-opq",
+        "tags": [
+            "personality",
+            "behavior",
+            "hr"
+        ]
+    },
+    {
+        "name": "Global Skills Assessment (GSA)",
+        "link": "https://www.shl.com/products/assessments/behavioral-assessments/global-skills-assessment-gsa",
+        "tags": [
+            "skills",
+            "behavior",
+            "communication"
+        ]
+    },
+    {
+        "name": "Situational Judgment Tests (SJT)",
+        "link": "https://www.shl.com/products/assessments/behavioral-assessments/situation-judgement-tests-sjt",
+        "tags": [
+            "decision",
+            "behavior",
+            "judgement"
+        ]
+    },
+    {
+        "name": "SHL Verify Cognitive",
+        "link": "https://www.shl.com/products/assessments/cognitive-assessments",
+        "tags": [
+            "aptitude",
+            "cognitive",
+            "reasoning"
+        ]
+    }
+]

@@ -1,0 +1,70 @@
+SHL Conversational Assessment Recommender
+Approach Document
+
+1. Project Overview
+This project presents a conversational recommendation system that assists recruiters and hiring
+managers in selecting suitable SHL Individual Test Solutions. Rather than relying on simple
+keyword matching, the system interprets natural language requests, identifies hiring intent, and
+recommends appropriate assessments from the SHL catalogue. The application has been
+implemented as a stateless FastAPI service in accordance with the assignment specification. Every
+request contains the complete conversation history, allowing the agent to understand context
+without maintaining server-side session data. The design emphasizes reliability, modularity,
+scalability, and ease of maintenance while ensuring that every recommendation is grounded in the
+SHL catalogue.
+
+2. System Architecture
+The application is organized into independent modules for API handling, conversational reasoning,
+retrieval, and catalogue storage. FastAPI exposes the required endpoints, while the agent module
+manages dialogue flow including clarification, recommendation, refinement, comparison, and
+refusal. The retrieval component performs semantic search using SentenceTransformers and
+FAISS. Separating responsibilities into dedicated modules improves readability, simplifies
+debugging, and allows future enhancements without affecting the overall architecture.
+
+3. Retrieval Strategy
+The complete SHL catalogue is converted into dense vector embeddings using the
+all-MiniLM-L6-v2 SentenceTransformer model. These embeddings are indexed using FAISS,
+enabling efficient nearest-neighbour search even for large catalogues. During execution, the user
+query is embedded and compared against indexed catalogue entries. The highest-ranking
+assessments are retrieved and converted into structured recommendation objects containing the
+assessment name and official SHL catalogue URL. This semantic retrieval approach performs
+better than exact keyword matching because it captures contextual similarity between user requests
+and catalogue descriptions.
+
+4. Conversation Design
+The conversational workflow follows four major behaviours defined in the assignment. First,
+vague requests trigger clarification questions requesting information such as job role, skills, or
+experience. Second, once sufficient context is available, the system retrieves between one and ten
+relevant assessments. Third, if the user changes requirements during the conversation, the latest
+request is processed together with previous conversation history so recommendations are updated
+instead of restarting the interaction. Finally, comparison requests generate grounded explanations
+using retrieved catalogue information while off-topic requests are politely refused to maintain
+domain boundaries.
+
+5. Design Decisions
+A hybrid approach combining deterministic conversation rules with semantic retrieval was selected
+because it balances consistency and flexibility. Rule-based logic guarantees predictable behaviour
+for clarification, comparison, and refusal scenarios, while vector search provides robust retrieval
+for varied natural language expressions. The stateless API design aligns with distributed
+deployment environments and simplifies horizontal scaling. FastAPI was selected for its
+performance, automatic documentation, and straightforward request validation.
+
+6. Testing and Evaluation
+Testing was performed using representative scenarios including vague hiring requests,
+role-specific recommendations, refinement across multiple conversation turns, comparison queries,
+and off-topic prompts. Responses were verified for schema compliance, recommendation count,
+URL correctness, and conversation completion status. Particular attention was given to ensuring
+that recommendations originated exclusively from the SHL catalogue and that clarification
+occurred before recommendations whenever insufficient information was available.
+
+7. Future Enhancements
+Future improvements include learning-based intent classification, reranking retrieved assessments
+using cross-encoders, richer catalogue metadata, and explanation generation based entirely on
+retrieved evidence. Additional automated evaluation datasets and logging could further improve
+robustness and retrieval quality while maintaining strict grounding in the official SHL catalogue.
+
+8. Conclusion
+The completed solution demonstrates a modular conversational recommendation system that
+combines semantic search, structured dialogue management, and FastAPI deployment. The
+architecture satisfies the required API specification while remaining maintainable and extensible.
+The retrieval-based design reduces hallucinations by grounding responses in catalogue data and
+provides a practical foundation for future production enhancements.
