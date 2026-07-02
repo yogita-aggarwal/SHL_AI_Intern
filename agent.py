@@ -1,14 +1,53 @@
 from retriever import search_catalog
+import re
 
 CLARIFICATION = "Could you provide job role, skills, and experience level?"
 
-OFF_TOPIC = ["weather", "cricket", "movie", "politics", "song"]
+OFF_TOPIC = [
+    "weather",
+    "cricket",
+    "movie",
+    "politics",
+    "song",
+    "football",
+    "ipl",
+    "bitcoin",
+    "crypto",
+    "recipe",
+    "music",
+    "stock",
+    "travel",
+    "visa",
+    "salary",
+    "compensation",
+    "interview tips",
+    "legal",
+    "employment law",
+]
 
 VAGUE = ["assessment", "test", "hire", "hiring"]
 
 PERSONALITY = ["personality", "opq"]
 COGNITIVE = ["cognitive", "aptitude"]
 SKILLS = ["python", "java", "sql", "developer", "engineer", "analyst"]
+SHL_SCOPE_TERMS = [
+    "shl",
+    "assessment",
+    "test",
+    "hire",
+    "hiring",
+    "candidate",
+    "screen",
+    "role",
+    "job description",
+    "jd",
+    "personality",
+    "cognitive",
+    "aptitude",
+    "skills",
+    "opq",
+    "gsa",
+]
 
 
 def text(messages):
@@ -16,11 +55,26 @@ def text(messages):
 
 
 def is_off_topic(q):
-    return any(x in q for x in OFF_TOPIC)
+    # Explicit blocked domains
+    if any(x in q for x in OFF_TOPIC):
+        return True
+
+    # If user asks a broad non-assessment question and gives no SHL hiring signal,
+    # treat it as off-topic for this assignment.
+    has_scope_signal = any(x in q for x in SHL_SCOPE_TERMS)
+    generic_question = bool(
+        re.search(
+            r"\b(what|why|how|when|where|who)\b", q
+        )
+    )
+    return generic_question and not has_scope_signal
 
 
 def is_comparison(q):
-    return any(x in q for x in ["difference", "compare", "vs", "versus"])
+    # Accept common typo variants like "differnce"/"diffrence" as well.
+    return bool(
+        re.search(r"\b(compare|comparison|vs|versus|differ\w*|diff\w*)\b", q)
+    )
 
 
 def needs_clarification(q):
@@ -47,7 +101,10 @@ def process(messages):
     # 1. OFF TOPIC
     if is_off_topic(q):
         return {
-            "reply": "I can only help with SHL assessments.",
+            "reply": (
+                "I can only help with SHL assessments from the SHL catalog. "
+                "I cannot answer non-assessment or general legal/hiring advice requests."
+            ),
             "recommendations": [],
             "end_of_conversation": False
         }

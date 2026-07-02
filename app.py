@@ -25,7 +25,7 @@
 #     return process(messages)
 from fastapi import FastAPI
 from pydantic import BaseModel
-from processor import process
+from agent import process
 
 app = FastAPI()
 

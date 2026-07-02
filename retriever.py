@@ -321,16 +321,37 @@
 #         results.append(item)
 
 #     return results
-import faiss
+import json
 import pickle
-from sentence_transformers import SentenceTransformer
+from pathlib import Path
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+try:
+    import faiss  # type: ignore
+except Exception:
+    faiss = None
 
-index = faiss.read_index("vector_db/catalog.index")
+try:
+    from sentence_transformers import SentenceTransformer  # type: ignore
+except Exception:
+    SentenceTransformer = None
 
-with open("vector_db/catalog.pkl", "rb") as f:
-    catalog = pickle.load(f)
+model = None
+index = None
+catalog = []
+
+base_dir = Path(__file__).resolve().parent
+catalog_pkl = base_dir / "vector_db" / "catalog.pkl"
+catalog_index = base_dir / "vector_db" / "catalog.index"
+catalog_json = base_dir / "catalog.json"
+
+if faiss is not None and SentenceTransformer is not None and catalog_pkl.exists() and catalog_index.exists():
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    index = faiss.read_index(str(catalog_index))
+    with open(catalog_pkl, "rb") as f:
+        catalog = pickle.load(f)
+elif catalog_json.exists():
+    with open(catalog_json, "r", encoding="utf-8") as f:
+        catalog = json.load(f)
 
 def clean_link(link):
     if not link:
@@ -346,18 +367,35 @@ def clean_link(link):
     return link
 
 def search_catalog(query, top_k=10):
-    embedding = model.encode([query])
-    distances, indices = index.search(embedding, top_k)
+    if not query:
+        return []
+
+    # Semantic search path (if FAISS + embedding model is available).
+    if model is not None and index is not None:
+        embedding = model.encode([query])
+        distances, indices = index.search(embedding, top_k)
+        results = []
+        for idx in indices[0]:
+            if idx == -1 or idx >= len(catalog):
+                continue
+            item = catalog[idx].copy()
+            item["link"] = clean_link(item.get("link", ""))
+            results.append(item)
+        return results
+
+    # Fallback keyword search path so API still runs without FAISS.
+    q_tokens = set(query.lower().split())
+    scored = []
+    for item in catalog:
+        text = f"{item.get('name', '')} {' '.join(item.get('tags', []))}".lower()
+        score = sum(1 for t in q_tokens if t in text)
+        if score > 0:
+            scored.append((score, item))
+    scored.sort(key=lambda x: x[0], reverse=True)
 
     results = []
-
-    for idx in indices[0]:
-        if idx == -1 or idx >= len(catalog):
-            continue
-
-        item = catalog[idx].copy()
-        item["link"] = clean_link(item.get("link", ""))
-
-        results.append(item)
-
+    for _, item in scored[:top_k]:
+        copy_item = item.copy()
+        copy_item["link"] = clean_link(copy_item.get("link", ""))
+        results.append(copy_item)
     return results
