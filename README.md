@@ -1,5 +1,7 @@
 # SHL Conversational Assessment Recommender
 
+Run- https://shl-ai-intern.onrender.com/docs
+
 ## Overview
 
 This project implements a conversational AI agent that recommends appropriate SHL Individual Test Solutions based on hiring requirements. The application accepts conversational input, retrieves relevant assessments using semantic search, and returns structured recommendations through a FastAPI service.
